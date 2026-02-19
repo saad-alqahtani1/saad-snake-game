@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saad Snake Game</title>
+
+<style>
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:#111;
+    font-family:Arial;
+}
+
+#container{
+    position:relative;
+    width:400px;
+    height:400px;
+}
+
+canvas{
+    background:black;
+    box-shadow:0 0 25px lime;
+    display:block;
+}
+
+.overlay{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:rgba(0,0,0,0.9);
+    color:white;
+    text-align:center;
+}
+
+button{
+    padding:10px 20px;
+    font-size:18px;
+    margin:10px;
+    cursor:pointer;
+    background:lime;
+    border:none;
+    border-radius:6px;
+}
+
+/* أزرار الجوال */
+#controls{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.row{
+    display:flex;
+}
+
+.controlBtn{
+    width:60px;
+    height:60px;
+    font-size:24px;
+    margin:5px;
+    background:#222;
+    color:white;
+    border:2px solid lime;
+    border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<div id="container">
+    <canvas id="game" width="400" height="400"></canvas>
+
+    <div id="startScreen" class="overlay">
+        <h1>🐍 Saad Snake Game</h1>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="gameOverScreen" class="overlay" style="display:none;">
+        <h1>GAME OVER</h1>
+        <button onclick="startGame()">Restart</button>
+    </div>
+</div>
+
+<!-- أزرار التحكم -->
+<div id="controls">
+    <button class="controlBtn" onclick="setDirection('UP')">↑</button>
+    <div class="row">
+        <button class="controlBtn" onclick="setDirection('LEFT')">←</button>
+        <button class="controlBtn" onclick="setDirection('DOWN')">↓</button>
+        <button class="controlBtn" onclick="setDirection('RIGHT')">→</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const size = 20;
+
+let snake;
+let food;
+let direction;
+let gameLoop;
+
+function startGame(){
+    document.getElementById("startScreen").style.display="none";
+    document.getElementById("gameOverScreen").style.display="none";
+
+    snake=[{x:200,y:200}];
+    direction="RIGHT";
+    food=randomFood();
+
+    clearInterval(gameLoop);
+    gameLoop=setInterval(update,100);
+}
+
+function randomFood(){
+    return {
+        x:Math.floor(Math.random()*20)*size,
+        y:Math.floor(Math.random()*20)*size
+    }
+}
+
+// WASD للكمبيوتر
+document.addEventListener("keydown",function(e){
+    const key=e.key.toLowerCase();
+    if(key==="w") setDirection("UP");
+    if(key==="s") setDirection("DOWN");
+    if(key==="a") setDirection("LEFT");
+    if(key==="d") setDirection("RIGHT");
+});
+
+// وظيفة تغيير الاتجاه (تستخدم للكيبورد والأزرار)
+function setDirection(newDir){
+    if(newDir==="UP" && direction!=="DOWN") direction="UP";
+    if(newDir==="DOWN" && direction!=="UP") direction="DOWN";
+    if(newDir==="LEFT" && direction!=="RIGHT") direction="LEFT";
+    if(newDir==="RIGHT" && direction!=="LEFT") direction="RIGHT";
+}
+
+function update(){
+    ctx.clearRect(0,0,400,400);
+
+    let head={...snake[0]};
+
+    if(direction==="UP") head.y-=size;
+    if(direction==="DOWN") head.y+=size;
+    if(direction==="LEFT") head.x-=size;
+    if(direction==="RIGHT") head.x+=size;
+
+    if(
+        head.x<0 || head.y<0 ||
+        head.x>=400 || head.y>=400 ||
+        collision(head)
+    ){
+        clearInterval(gameLoop);
+        document.getElementById("gameOverScreen").style.display="flex";
+        return;
+    }
+
+    snake.unshift(head);
+
+    if(head.x===food.x && head.y===food.y){
+        food=randomFood();
+    }else{
+        snake.pop();
+    }
+
+    ctx.fillStyle="red";
+    ctx.fillRect(food.x,food.y,size,size);
+
+    ctx.fillStyle="lime";
+    snake.forEach(part=>{
+        ctx.fillRect(part.x,part.y,size,size);
+    });
+}
+
+function collision(head){
+    for(let i=0;i<snake.length;i++){
+        if(head.x===snake[i].x && head.y===snake[i].y){
+            return true;
+        }
+    }
+    return false;
+}
+</script>
+
+</body>
+</html>
